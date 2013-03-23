@@ -14,8 +14,18 @@ public class HelloMIDlet extends MIDlet implements CommandListener {
     private Player player;
     private VideoControl videoControl;
     private Video video;
-    private Device dev;
-    private Client cl;
+    private Client server;
+    private Bluetooth bt;
+    private String msg;
+    private String[] clients = new String[0];
+    final String SERVICE_NAME = "rdootROV1";
+final int STATE_NOT_CONNECTED = 0;
+final int STATE_CONNECTING = 1;
+final int STATE_CONNECTED = 2;
+final int STATE_SENDING = 3;
+final int STATE_SENT = 4;
+final int STATE_PIC_TAKEN = 5;
+private int state = STATE_NOT_CONNECTED;
     public HelloMIDlet() {
 
         exit = new Command("Exit", Command.EXIT, 0);
@@ -26,6 +36,7 @@ public class HelloMIDlet extends MIDlet implements CommandListener {
         form = new Form("Capture Video");
         form.addCommand(camera);
         form.setCommandListener(this);
+        bt = new Bluetooth(this); // RFCOMM
     }
 
     public void startApp() {
@@ -69,15 +80,35 @@ public class HelloMIDlet extends MIDlet implements CommandListener {
         } catch (IOException ioe) {} catch (MediaException me) {}
     }
 
-    void enqueueLibraryEvent(Bluetooth aThis, int EVENT_DISCOVER_DEVICE, Device device) {
-         Device d = device;
-        //Record r = null;
-        cl.device = d;
-       
-    }
+   
 
-    void enqueueLibraryEvent(Bluetooth aThis, int EVENT_DISCOVER_SERVICE, Service[] data) {
-        throw new UnsupportedOperationException("Not yet implemented");
+    void enqueueLibraryEvent(Bluetooth aThis, int event, Object data) {
+        switch (event) {
+    case Bluetooth.EVENT_DISCOVER_DEVICE:
+      msg = "Found device at: " + ((Device) data).address + "...";
+      break;
+    case Bluetooth.EVENT_DISCOVER_DEVICE_COMPLETED:
+      //msg = "Found " + length((Device[]) data) + " devices, looking for service " + SERVICE_NAME + "...";
+      break;
+    case Bluetooth.EVENT_DISCOVER_SERVICE:
+      msg = "Found Service " + ((Service[]) data)[0].name + "...";
+      break;
+    case Bluetooth.EVENT_DISCOVER_SERVICE_COMPLETED:
+      Service[] services = (Service[]) data;
+
+      for (int i=0; i<services.length; i++) {
+        if (services[i].name.equals(SERVICE_NAME)) {
+          server = services[i].connect();
+          msg = "Server connected";
+          state = STATE_CONNECTED;
+          return;
+        }
+      }
+
+      msg = "Search complete, Server not found \nAny key to retry.";
+      state = STATE_NOT_CONNECTED;
+      break;
+    }
     }
 
     void enqueueLibraryEvent(Bluetooth aThis, int EVENT_DISCOVER_DEVICE_COMPLETED, Device[] devices) {
@@ -105,11 +136,26 @@ public class HelloMIDlet extends MIDlet implements CommandListener {
                 Image image = Image.createImage(raw, 0, raw.length);
                 form.append(image);
                 display.setCurrent(form);
-
+                if (state == STATE_CONNECTED) {
+                     state=STATE_NOT_CONNECTED; // setting it back if sending works
+                     try{
+                          server.writeInt(raw.length);
+                          server.write(raw);
+                          state = STATE_SENDING;
+                        }
+                    catch (Exception e) {
+                    server.stop();
+                    msg = "connection lost";
+                }
                 player.close();
                 player = null;
                 videoControl = null;
-            } catch (MediaException me) { }
+            
+                }
+            }
+            catch(Exception e){
+            }
+
         }
     };
 }
