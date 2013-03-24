@@ -6,7 +6,7 @@ import javax.microedition.media.*;
 import javax.microedition.media.control.*;
 import javax.microedition.midlet.MIDlet;
 import javax.microedition.media.control.VideoControl;
-public class HelloMIDlet extends MIDlet implements CommandListener {
+public class HelloMIDlet extends MIDlet implements CommandListener, Runnable {
 
     private Display display;
     private Form form;
@@ -119,6 +119,29 @@ private int state = STATE_NOT_CONNECTED;
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
+    public void run() {
+        try {
+                byte[] raw = videoControl.getSnapshot(null);
+
+
+                //display.setCurrent(form);
+                if (state == STATE_CONNECTED) {
+                     state=STATE_NOT_CONNECTED; // setting it back if sending works
+                     try{
+                          server.writeInt(raw.length);
+                          server.write(raw);
+                          state = STATE_SENDING;
+                        }
+                    catch (Exception e) {
+                    server.stop();
+                    msg = "connection lost";
+                }
+                } }
+                catch(MediaException e){
+
+                }
+    }
+
     class Video extends Thread {
         HelloMIDlet midlet;
         public Video(HelloMIDlet midlet) {
@@ -133,9 +156,9 @@ private int state = STATE_NOT_CONNECTED;
         public void captureVideo() {
             try {
                 byte[] raw = videoControl.getSnapshot(null);
-                Image image = Image.createImage(raw, 0, raw.length);
-                form.append(image);
-                display.setCurrent(form);
+               
+                
+                //display.setCurrent(form);
                 if (state == STATE_CONNECTED) {
                      state=STATE_NOT_CONNECTED; // setting it back if sending works
                      try{
@@ -147,9 +170,9 @@ private int state = STATE_NOT_CONNECTED;
                     server.stop();
                     msg = "connection lost";
                 }
-                player.close();
-                player = null;
-                videoControl = null;
+               // player.close();
+               // player = null;
+               // videoControl = null;
             
                 }
             }

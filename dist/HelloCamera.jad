@@ -1,5 +1,5 @@
 MIDlet-1: HelloMIDlet, , hello.HelloMIDlet
-MIDlet-Jar-Size: 15352
+MIDlet-Jar-Size: 15219
 MIDlet-Jar-URL: HelloCamera.jar
 MIDlet-Name: HelloCamera
 MIDlet-Vendor: Vendor

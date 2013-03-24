@@ -22,7 +22,7 @@ public class VideoCanvas extends Canvas {
     public void paint(Graphics g) {
         int width = getWidth();
         int height = getHeight();
-
+      
         g.setColor(0x00ff00);
         g.drawRect(0, 0, width - 1, height - 1);
         g.drawRect(1, 1, width - 3, height - 3);
