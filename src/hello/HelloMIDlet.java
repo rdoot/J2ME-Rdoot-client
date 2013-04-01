@@ -89,20 +89,24 @@ public class HelloMIDlet extends MIDlet implements CommandListener, Runnable {
     public void run() {
        try {
                byte[] raw = videoControl.getSnapshot(null);
-               if(state==0){
+               
                    try {
                     mDiscoveryAgent = LocalDevice.getLocalDevice().getDiscoveryAgent();
                     url = mDiscoveryAgent.selectService(HELLOSERVICE_ID, ServiceRecord.NOAUTHENTICATE_NOENCRYPT, false);
                     conn = (StreamConnection) Connector.open(url);
-                    in = new DataInputStream(conn.openInputStream());
+                   // in = new DataInputStream(conn.openInputStream());
                     out = new DataOutputStream(conn.openOutputStream());
-                    state = 1;
-                   }catch (Exception e){ state = 0;}
+                    
+                  /* }catch (Exception e){ state = 0;}
                }
                else if (state == 1){
-                   try {
-                       out.writeInt(raw.length);
-                       String received = in.readUTF();
+                   try {*/
+                       out.write(raw.length>> 8);
+                       out.write(raw.length& 0xff);
+                       out.write(raw);
+                       out.flush ();
+                       //To be enabled later
+                       /*String received = in.readUTF();
                        if(received == "Ready"){
                             out.write(raw);
                             received = in.readUTF();
@@ -119,10 +123,10 @@ public class HelloMIDlet extends MIDlet implements CommandListener, Runnable {
                                 conn.close();
                                 state = 0;
                             }
-                       }
+                       }*/
                    }catch(Exception e){
 
-                   }
+                   
                }
 
 
